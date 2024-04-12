@@ -16,6 +16,11 @@ WebDriverWait(driver, 5).until(
 element = driver.find_element(By.CLASS_NAME,"gLFyf")
 element.send_keys("Zyad Elmahdy" + Keys.ENTER)
 
+link = WebDriverWait(driver, 5).until(
+    EC.presence_of_element_located((By.PARTIAL_LINK_TEXT,"Zyad Elmahdy - Software Quality Assurance Specialist"))
+)
+link.click()
+
 time.sleep(5)
 
 driver.quit()
