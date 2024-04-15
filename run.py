@@ -1,6 +1,5 @@
-from apnews.apnews import Apnews
+from shared.yahoo import Yahoo
 
-inst = Apnews()
-inst.land_first_page()
-
-inst.quit()
+with Yahoo(teardown=True) as bot:
+    bot.load_first_page()
+    print('Successfully loaded Yahoo News first page.')
