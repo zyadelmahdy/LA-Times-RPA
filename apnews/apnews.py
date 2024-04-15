@@ -1,12 +1,16 @@
-# from selenium import webdriver
-# import const
+from .const import initialize_driver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 
-# driver = webdriver.Chrome()
+class Apnews:
+    def __init__(self):
+        self.driver = initialize_driver()
 
-# class Apnews (webdriver.Chrome):
-#     def __init__ (self, driver=driver) :
-#         self.driver_path = driver
-#         super (Apnews, self).__init__()
+    def land_first_page(self):
+        self.driver.get('https://apnews.com/')
+        time.sleep(2)
 
-#     def land_first_page(self) :
-#         self. get(const.BASE_URL)
+    def quit(self):
+        self.driver.quit()
