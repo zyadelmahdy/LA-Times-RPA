@@ -1,5 +1,6 @@
-from shared.yahoo import Yahoo
+from shared.latimes import LATimes
 
-with Yahoo(teardown=True) as bot:
+with LATimes(teardown=True) as bot:
     bot.load_first_page()
-    print('Successfully loaded Yahoo News first page.')
+    print('Successfully loaded LA Times first page.')
+    bot.search('education')
