@@ -18,9 +18,10 @@ class LATimes:
         self.driver.get('https://www.latimes.com/')
         
         try:
-            EC.presence_of_element_located((By.CSS_SELECTOR, "body"))
+            WebDriverWait(self.driver, 200).until(EC.presence_of_element_located((By.CSS_SELECTOR, "body")))
+            print("Body loaded successfully")
         except TimeoutException:
-            print("Timeout: Failed to load Yahoo News within 10 seconds.")
+            print("Timeout: Failed to load LA Times within 10 seconds.")
 
 
     def search(self, search_word):
