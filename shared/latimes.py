@@ -64,17 +64,42 @@ class LATimes:
 
         climate_environment.click()
 
-        # x_button = self.driver.find_element(By.XPATH, "/html/body/modality-custom-element//div/div/div/div/a")
-        # x_button.click()
+        print('topic chosen')
+        time.sleep(70)
+
+
+        iframe_locator = self.driver.switch_to.frame(0)
+        iframe = self.driver.find_element(*iframe_locator)
+        self.driver.switch_to.frame(iframe)
+        print("Switched to iframe")
+
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "class=met-flyout-close"))).click()
+            print("X btn clicked successfully")
+        except TimeoutException:
+            print("Timeout: Failed to click on the X btn within 10 seconds.")
+
+        self.driver.switch_to.default_content()
+
+        
+
 
         time.sleep(3)
+        # x_button = self.driver.find_element(By.XPATH, "")
+        # x_button.click()
 
-        sort_dropdown = self.driver.find_element(By.CSS_SELECTOR, "[name='s']")
+        sort_dropdown = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")
+        actions = ActionChains(self.driver)
+        actions.move_to_element(sort_dropdown).perform()
+        time.sleep(3)
         sort_dropdown.click()
+
+        print('dropdown menu clicked')
 
         time.sleep(3)
 
         newest_option = self.driver.find_element(By.CSS_SELECTOR, "[value='1']")
+        time.sleep(3)
         newest_option.click()
 
         print("Sorted by Newest")
