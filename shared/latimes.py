@@ -8,11 +8,9 @@ from datetime import datetime, timedelta
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
+from openpyxl import Workbook
+from bs4 import BeautifulSoup
 import pandas as pd
-
-
-    
-
 
 
 
@@ -56,8 +54,6 @@ class LATimes:
         list_items = self.driver.find_elements(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul")
 
 
-    
-
     def sort_newest(self):
         time.sleep(2)
 
@@ -78,9 +74,6 @@ class LATimes:
 
         print('topic chosen')
         time.sleep(2)
-
-
-        
 
 
         time.sleep(2)
@@ -139,7 +132,6 @@ class LATimes:
             pub_date = post.find_element(By.CLASS_NAME, "promo-timestamp")
 
             pub_date_str = pub_date.text
-            # pub_date = datetime.strptime(pub_date_str, '%B %d, %Y')
             pub_date = None
             for fmt in formats:
                 try:
@@ -160,30 +152,18 @@ class LATimes:
             image_src = image.get_attribute("src")
             print(f"Image source: {image_src}")
             print('-='*90)
-            
-        # def filter_by_date(self):
+            return title, desc, pub_date, image_src
 
-            # Calculate the date three months ago
 
-            # Filter news articles published in the last three months
-    
-    
-    # def pull_date(self, ):
+    def export(self):
         
-        
-        
-        
-    # def pull_desc(self, ):
-        
-        
-    
-    
-    
-    
-    
-    
-    
-    
+        title, desc, pub_date, image_src = self.pull_titles()
+        news_data = []
+        news_data.append([title, desc, pub_date, image_src])
+        wb = Workbook()
+        ws = wb.active
+        wb.save("news_data.xlsx")
+
     def __exit__(self, exc_type, exc_value, traceback):
         if self.teardown:
             self.driver.quit()
