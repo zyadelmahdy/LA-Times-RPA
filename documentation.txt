@@ -1,0 +1,28 @@
+LATimes Scraper Documentation:
+Overview
+--------
+LATimes Scraper is a Python application designed to scrape news articles from the Los Angeles Times website (https://www.latimes.com/). It utilizes Selenium WebDriver to navigate and extract data from the website, and OpenPyXL to export the collected data to an Excel file.
+
+Features
+--------
+Load First Page: Loads the main page of the Los Angeles Times website.
+Search: Allows users to search for specific topics on the website.
+Pull Titles: Extracts article titles, descriptions, publication dates, and image sources from the search results.
+Export: Saves the extracted data into an Excel file named "news_data.xlsx".
+Filter (Placeholder): Placeholder method for implementing filtering functionality.
+Sort Newest (Placeholder): Placeholder method for implementing sorting functionality.
+
+Requirements
+------------
+Check requirements.txt file.
+
+Usage
+-----
+Create an instance of the LATimes class.
+Use the available methods to interact with the Los Angeles Times website:
+load_first_page(): Load the main page of the website.
+search(search_word): Search for a specific topic on the website.
+pull_data(): Extract article data from the search results.
+filter(selected_items): [Placeholder] Filter the search results based on selected criteria.
+sort_newest(): [Placeholder] Sort the search results by the newest articles.
+export(): Save the extracted data to an Excel file.
