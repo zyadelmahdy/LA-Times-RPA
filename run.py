@@ -6,5 +6,5 @@ with LATimes(teardown=True) as bot:
     bot.search('education')
     bot.filter([])
     bot.sort_newest()
-    bot.pull_titles()
-    bot.export()
+    bot.pull_data()
+    bot.export() 

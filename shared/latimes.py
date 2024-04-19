@@ -10,7 +10,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from openpyxl import Workbook
 from bs4 import BeautifulSoup
-import pandas as pd
+# import pandas as pd
 
 
 
@@ -58,9 +58,9 @@ class LATimes:
         time.sleep(2)
 
         
-        climate_environment = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul/li[54]/div/div[1]/label/input")
+        politics = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul/li[3]/div/div[1]/label/input")
         actions = ActionChains(self.driver)
-        actions.move_to_element(climate_environment).perform()
+        actions.move_to_element(politics).perform()
         time.sleep(2)
         try:
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
@@ -70,7 +70,7 @@ class LATimes:
             print("Pop up deleted successfully")
         except TimeoutException:
             print("Timeout: Failed to delete the pop up within 10 seconds.")
-        climate_environment.click()
+        politics.click()
 
         print('topic chosen')
         time.sleep(2)
@@ -104,60 +104,65 @@ class LATimes:
             self.image = image
             self.count = count
             self.contains_money = contains_money
-            
 
 
-    def pull_titles(self):
+    def pull_data(self):
         time.sleep(2)
+        all_data = []
         posts = self.driver.find_element(By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")   
-        articles = posts.find_elements(By.TAG_NAME,"li")
+        articles = posts.find_elements(By.TAG_NAME, "li")
+        title = (articles.find_element(By.CLASS_NAME, "promo-title"))
+        search_word = "education"
+        word_count = title.text.lower().count(search_word.lower())
+        desc = (articles.find_element(By.CLASS_NAME,"promo-description"))
+        img = (articles.find_element(By.CLASS_NAME,"promo-media"))
+        image = img.find_element(By.TAG_NAME, "img")
+        image_src = image.get_attribute("src")
+        pub_date = articles.find_element(By.CLASS_NAME, "promo-timestamp")
+        pub_date_str = pub_date.text
 
-        for post in articles:
-            title = (post.find_element(By.CLASS_NAME,"promo-title"))
+
+
+        while pub_date >= three_months_ago:
+
             print(f"{title.text}")
-            search_word = "education"
-            word_count = title.text.lower().count(search_word.lower())
-            print(f"The word '{search_word}' appears {word_count} times in the title.")            
-            
-            desc = (post.find_element(By.CLASS_NAME,"promo-description"))
+
+            print(f"The word '{search_word}' appears {word_count} times in the title.")              
             print(f"The word '{search_word}' appears {word_count} times in the description.")
+
             print(f"{desc.text}")
 
-
-            current_date = datetime.now()
-            formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
-            three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
-            news_in_last_three_months = []
-
-            pub_date = post.find_element(By.CLASS_NAME, "promo-timestamp")
-
-            pub_date_str = pub_date.text
-            pub_date = None
-            for fmt in formats:
-                try:
-                    pub_date = datetime.strptime(pub_date_str, fmt)
-                    break
-                except ValueError:
-                    continue
-                
             if pub_date >= three_months_ago:
-                news_in_last_three_months.append(articles)
+                self.driver.find_element(By.CSS_SELECTOR, "a > .chevron-icon").click()
+                current_date = datetime.now()
+                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
+                three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
+                news_in_last_three_months = []
 
-            print(f"{pub_date}")
+                pub_date = None
+                for fmt in formats:
+                    try:
+                        pub_date = datetime.strptime(pub_date_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+                    
+                if pub_date >= three_months_ago:
+                    news_in_last_three_months.append(articles)
 
-
-
-            img = (post.find_element(By.CLASS_NAME,"promo-media"))
-            image = img.find_element(By.TAG_NAME, "img")
-            image_src = image.get_attribute("src")
+                    print(f"{pub_date}")
+            else:
+                continue
             print(f"Image source: {image_src}")
             print('-='*90)
-            return title, desc, pub_date, image_src
+
+            
+            
+        return all_data
 
 
     def export(self):
-        
-        title, desc, pub_date, image_src = self.pull_titles()
+        title, desc, pub_date, image_src = self.pull_data()
         news_data = []
         news_data.append([title, desc, pub_date, image_src])
         wb = Workbook()
@@ -167,3 +172,4 @@ class LATimes:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.teardown:
             self.driver.quit()
+
