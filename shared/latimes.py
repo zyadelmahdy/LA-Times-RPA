@@ -106,59 +106,84 @@ class LATimes:
             self.contains_money = contains_money
 
 
+
     def pull_data(self):
         time.sleep(2)
         all_data = []
-        posts = self.driver.find_element(By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")   
-        articles = posts.find_elements(By.TAG_NAME, "li")
-        title = (articles.find_element(By.CLASS_NAME, "promo-title"))
         search_word = "education"
-        word_count = title.text.lower().count(search_word.lower())
-        desc = (articles.find_element(By.CLASS_NAME,"promo-description"))
-        img = (articles.find_element(By.CLASS_NAME,"promo-media"))
-        image = img.find_element(By.TAG_NAME, "img")
-        image_src = image.get_attribute("src")
-        pub_date = articles.find_element(By.CLASS_NAME, "promo-timestamp")
-        pub_date_str = pub_date.text
 
-
-
-        while pub_date >= three_months_ago:
-
-            print(f"{title.text}")
-
-            print(f"The word '{search_word}' appears {word_count} times in the title.")              
-            print(f"The word '{search_word}' appears {word_count} times in the description.")
-
-            print(f"{desc.text}")
-
-            if pub_date >= three_months_ago:
-                self.driver.find_element(By.CSS_SELECTOR, "a > .chevron-icon").click()
+        while True:
+            posts = self.driver.find_element(By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")   
+            articles = posts.find_elements(By.TAG_NAME, "li")
+            for article in articles:
+                title = article.find_element(By.CLASS_NAME, "promo-title")
+                word_count = title.text.lower().count(search_word.lower())
+                desc = article.find_element(By.CLASS_NAME,"promo-description")
+                img = article.find_element(By.CLASS_NAME,"promo-media")
+                image = img.find_element(By.TAG_NAME, "img")
+                image_src = image.get_attribute("src")
+                pub_date = article.find_element(By.CLASS_NAME, "promo-timestamp")
+                pub_date_str = pub_date.text
                 current_date = datetime.now()
-                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
                 three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
-                news_in_last_three_months = []
+
+                # Define formats outside the if block
+                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']  # Possible date formats
+
+            
+
+                print(f"The title: '{title.text}'")
+
+                print(f"The word '{search_word}' appears {word_count} times in the title.")              
+                print(f"The word '{search_word}' appears {word_count} times in the description.")
+
+                print(f"The description: '{desc.text}'")
+                print(f"Image source: {image_src}")
+                print('-='*90)
+                try:
+                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
+                    print('popup found')
+                    element = self.driver.find_element(By.NAME,"metering-bottompanel")
+                    self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
+                    print("Pop up deleted successfully")
+                except TimeoutException:
+                    print("Timeout: Failed to delete the pop up within 10 seconds.")
+
+
 
                 pub_date = None
                 for fmt in formats:
                     try:
                         pub_date = datetime.strptime(pub_date_str, fmt)
-                        break
-                    except ValueError:
-                        continue
-                    
-                if pub_date >= three_months_ago:
-                    news_in_last_three_months.append(articles)
+                        print("Correct Date" ,pub_date, "stored three months ago is",three_months_ago)
+                        break  # Exit loop after successful parsing
+                    except ValueError as e:
+                        print(f"Error parsing date '{pub_date_str}' with format '{fmt}': {e}")
+                        continue  # Move on to the next format
 
-                    print(f"{pub_date}")
-            else:
-                continue
-            print(f"Image source: {image_src}")
-            print('-='*90)
-
-            
-            
-        return all_data
+                if pub_date is not None and pub_date >= three_months_ago:
+                    print("Closing because time is more than 3 months")
+                    # return all_data
+            print('Clicking next')
+            try:
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
+                print('popup found')
+                element = self.driver.find_element(By.NAME,"metering-bottompanel")
+                self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
+                print("Pop up deleted successfully")
+            except TimeoutException:
+                print("Timeout: Failed to delete the pop up within 10 seconds.")
+            self.driver.find_element(By.CSS_SELECTOR, "a > .chevron-icon").click()
+            try:
+                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
+                print('popup found')
+                element = self.driver.find_element(By.NAME,"metering-bottompanel")
+                self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
+                print("Pop up deleted successfully")
+            except TimeoutException:
+                print("Timeout: Failed to delete the pop up within 10 seconds.")
+        
+        
 
 
     def export(self):
