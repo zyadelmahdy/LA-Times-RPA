@@ -9,11 +9,10 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from openpyxl import Workbook
-from bs4 import BeautifulSoup
-# import pandas as pd
+from selenium import webdriver
 
-
-
+options = webdriver.ChromeOptions()
+driver = webdriver.Chrome(options=options)
 class LATimes:
     def __init__(self, teardown=False):
         self.driver = initialize_driver()
