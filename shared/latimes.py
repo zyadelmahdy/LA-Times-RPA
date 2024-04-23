@@ -36,32 +36,35 @@ class LATimes:
         time.sleep(2)
 
         magnify_icon.click()
-        time.sleep(2)
-
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, '/html/body/ps-header/header/div[2]/div[2]/form/label/input')))
         search_bar = self.driver.find_element(By.XPATH, '/html/body/ps-header/header/div[2]/div[2]/form/label/input')
         time.sleep(2)
         search_bar.send_keys(f'{search_word}')
-        time.sleep(2)
+        time.sleep(1)
         search_bar.send_keys(Keys.ENTER)
-        time.sleep(2)
+
 
     def filter(self, selected_items):
-        time.sleep(2)
-        see_more_btn = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/button")
-        time.sleep(2)
-        see_more_btn.click()
-        time.sleep(2)
+
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/button")))
+            see_more_btn = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/button")
+
+            see_more_btn.click()
+        except TimeoutException:
+            print("Timeout: Failed to delete the pop up within 10 seconds.")
+
         list_items = self.driver.find_elements(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul")
 
 
     def sort_newest(self):
-        time.sleep(2)
+        
 
         
         politics = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul/li[3]/div/div[1]/label/input")
         actions = ActionChains(self.driver)
         actions.move_to_element(politics).perform()
-        time.sleep(2)
+        
         try:
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
             print('popup found')
@@ -73,28 +76,27 @@ class LATimes:
         politics.click()
 
         print('topic chosen')
-        time.sleep(2)
+        
 
 
-        time.sleep(2)
-
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")))
         sort_dropdown = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")
         actions = ActionChains(self.driver)
         actions.move_to_element(sort_dropdown).perform()
-        time.sleep(2)
+        
         sort_dropdown.click()
 
         print('dropdown menu clicked')
 
-        time.sleep(2)
+        
 
         newest_option = self.driver.find_element(By.CSS_SELECTOR, "[value='1']")
-        time.sleep(2)
+        
         newest_option.click()
 
         print("Sorted by Newest")
 
-        time.sleep(2)
+        
 
     class Article :
         def __init__(self, title,date,description,image,count,contains_money):
@@ -105,14 +107,25 @@ class LATimes:
             self.count = count
             self.contains_money = contains_money
 
-
+    def delete_banner(self,time=10):
+        try:
+            WebDriverWait(self.driver, time).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
+            print('popup found')
+            element = self.driver.find_element(By.NAME,"metering-bottompanel")
+            self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
+            print("Pop up deleted successfully")
+        except TimeoutException:
+            print("Timeout: Failed to delete the pop up within " +str(time)+" seconds.")
+        except:
+            pass
 
     def pull_data(self):
-        time.sleep(2)
+
         all_data = []
         search_word = "education"
 
         while True:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")))
             posts = self.driver.find_element(By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")   
             articles = posts.find_elements(By.TAG_NAME, "li")
             for article in articles:
@@ -124,6 +137,9 @@ class LATimes:
                 image_src = image.get_attribute("src")
                 pub_date = article.find_element(By.CLASS_NAME, "promo-timestamp")
                 pub_date_str = pub_date.text
+
+                article_data = self.Article(title,pub_date,desc,image,0,0)
+                all_data.append(article_data)
                 current_date = datetime.now()
                 three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
 
@@ -140,14 +156,7 @@ class LATimes:
                 print(f"The description: '{desc.text}'")
                 print(f"Image source: {image_src}")
                 print('-='*90)
-                try:
-                    WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
-                    print('popup found')
-                    element = self.driver.find_element(By.NAME,"metering-bottompanel")
-                    self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
-                    print("Pop up deleted successfully")
-                except TimeoutException:
-                    print("Timeout: Failed to delete the pop up within 10 seconds.")
+                self.delete_banner(0.1)
 
 
 
@@ -161,27 +170,13 @@ class LATimes:
                         print(f"Error parsing date '{pub_date_str}' with format '{fmt}': {e}")
                         continue  # Move on to the next format
 
-                if pub_date is not None and pub_date >= three_months_ago:
+                if pub_date is not None and pub_date < three_months_ago:
                     print("Closing because time is more than 3 months")
-                    # return all_data
+                    return all_data
             print('Clicking next')
-            try:
-                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
-                print('popup found')
-                element = self.driver.find_element(By.NAME,"metering-bottompanel")
-                self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
-                print("Pop up deleted successfully")
-            except TimeoutException:
-                print("Timeout: Failed to delete the pop up within 10 seconds.")
-            self.driver.find_element(By.CSS_SELECTOR, "a > .chevron-icon").click()
-            try:
-                WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
-                print('popup found')
-                element = self.driver.find_element(By.NAME,"metering-bottompanel")
-                self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
-                print("Pop up deleted successfully")
-            except TimeoutException:
-                print("Timeout: Failed to delete the pop up within 10 seconds.")
+            self.delete_banner(1)
+            self.driver.find_element(By.CSS_SELECTOR, "div > .search-results-module-next-page").click()
+            self.delete_banner(1)
         
         
 
