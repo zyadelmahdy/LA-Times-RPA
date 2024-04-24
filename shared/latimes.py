@@ -9,7 +9,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from openpyxl import Workbook
+import openpyxl
 from selenium import webdriver
+# from robocorp.libraries.BuiltIn import BuiltIn
 
 options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(options=options)
@@ -181,12 +183,36 @@ class LATimes:
 
 
     def export(self):
-        title, desc, pub_date, image_src = self.pull_data()
-        news_data = []
-        news_data.append([title, desc, pub_date, image_src])
+        articles = []
+        data = self.pull_data()
         wb = Workbook()
         ws = wb.active
+        ws.append(["Title", "Date", "Word count" "Description", "Image"])
+        for article in data:
+            ws.append([article.title.text, articles.count, article.description.text, article.date.text, article.image.get_attribute("src")])
         wb.save("news_data.xlsx")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.teardown:
