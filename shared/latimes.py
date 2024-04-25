@@ -2,14 +2,13 @@ from .const import initialize_driver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-import time, datetime, re
+from selenium.common.exceptions import TimeoutException
+import time, datetime
 from datetime import datetime, timedelta
-from selenium.webdriver.remote.webelement import WebElement
+# from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from openpyxl import Workbook
-import openpyxl
 from selenium import webdriver
 # from robocorp.libraries.BuiltIn import BuiltIn
 
@@ -189,28 +188,8 @@ class LATimes:
         ws = wb.active
         ws.append(["Title", "Date", "Word count" "Description", "Image"])
         for article in data:
-            ws.append([article.title.text, articles.count, article.description.text, article.date.text, article.image.get_attribute("src")])
+            ws.append([article.title, articles.count, article.description, article.date, article.image.get_attribute("src")])
         wb.save("news_data.xlsx")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
