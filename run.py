@@ -7,7 +7,7 @@ with LATimes(teardown=True) as bot:
     bot.filter()
     bot.sort_newest()
     bot.pull_data()
-    bot.export()
+    # bot.export()
     # Inside your main code
-    # all_data = bot.pull_data()
-    # bot.export(all_data)
+    all_data = bot.pull_data()
+    bot.export(all_data)
