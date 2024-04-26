@@ -7,7 +7,7 @@ import time, datetime
 from datetime import datetime, timedelta
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from xlwt import Workbook
+# from xlwt import Workbook
 from selenium import webdriver
 import pandas as pd
 
@@ -20,6 +20,22 @@ class LATimes:
         self.teardown = teardown
     def __enter__(self):
         return self
+    
+    
+    
+    def delete_popup(self,time=10):
+        try:
+            WebDriverWait(self.driver, time).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
+            print('popup found')
+            element = self.driver.find_element(By.NAME,"metering-bottompanel")
+            self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
+            print("Pop up deleted successfully")
+        except TimeoutException:
+            print("Timeout: Failed to delete the pop up within " +str(time)+" seconds.")
+        except:
+            pass
+        
+        
 
     def load_first_page(self):
         self.driver.get('https://www.latimes.com/')
@@ -44,8 +60,7 @@ class LATimes:
         search_bar.send_keys(Keys.ENTER)
 
 
-    def filter(self, selected_items):
-
+    def filter(self):
         try:
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/button")))
             see_more_btn = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/button")
@@ -54,15 +69,16 @@ class LATimes:
         except TimeoutException:
             print("Timeout: Failed to delete the pop up within 10 seconds.")
 
-        list_items = self.driver.find_elements(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul")
+        list_of_topics = self.driver.find_elements(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul")
+        print(list_of_topics)
 
 
     def sort_newest(self):
-        
-
-        
+        time.sleep(2)
         politics = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/aside/div/div[3]/div[1]/ps-toggler/ps-toggler/div/ul/li[3]/div/div[1]/label/input")
+        time.sleep(2)
         actions = ActionChains(self.driver)
+        time.sleep(2)
         actions.move_to_element(politics).perform()
         
         try:
@@ -79,14 +95,17 @@ class LATimes:
         
 
 
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")))
-        sort_dropdown = self.driver.find_element(By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")
+        sort_dropdown = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")))
+        # sort_dropdown = self.driver.find_element(By.CSS_SELECTOR, "/html/body/div[2]/ps-search-results-module/form/div[2]/ps-search-filters/div/main/div[1]/div[2]/div/label/select")
+        print('sort menu found')
         actions = ActionChains(self.driver)
         actions.move_to_element(sort_dropdown).perform()
-        
-        sort_dropdown.click()
+        try:
+            sort_dropdown.click()
+            print('dropdown menu clicked')
 
-        print('dropdown menu clicked')
+        except:
+            print('sort dropdown cannot be clicked')
 
         
 
@@ -98,26 +117,32 @@ class LATimes:
 
         
 
-    class Article :
-        def __init__(self, title,date,description,image,count,contains_money):
-            self.title = title
-            self.date = date
-            self.description = description
-            self.image = image
-            self.count = count
-            self.contains_money = contains_money
+    class Article:
+        def __init__(self, article_data):
+            self.title = article_data.get('title')
+            self.date = article_data.get('date')
+            self.description = article_data.get('description')
+            self.image = article_data.get('image')
+            self.count = article_data.get('count')
 
-    def delete_banner(self,time=10):
-        try:
-            WebDriverWait(self.driver, time).until(EC.presence_of_element_located((By.NAME, "metering-bottompanel")))
-            print('popup found')
-            element = self.driver.find_element(By.NAME,"metering-bottompanel")
-            self.driver.execute_script("""var element = arguments[0]; element.parentNode.removeChild(element);""", element)
-            print("Pop up deleted successfully")
-        except TimeoutException:
-            print("Timeout: Failed to delete the pop up within " +str(time)+" seconds.")
-        except:
-            pass
+
+
+    def check_pub_date(self, pub_date_str):
+        formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
+        current_date = datetime.now()
+        three_months_ago = current_date - timedelta(days=3*30)
+
+        for fmt in formats:
+            try:
+                pub_date = datetime.strptime(pub_date_str, fmt)
+                print("Correct Date", pub_date, "stored three months ago is", three_months_ago)
+                return pub_date  # Return the parsed date if successful
+            except ValueError as e:
+                print(f"Error parsing date '{pub_date_str}' with format '{fmt}': {e}")
+                continue
+        
+        return None  # Return None if all formats fail
+
 
     def pull_data(self):
 
@@ -128,215 +153,72 @@ class LATimes:
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")))
             posts = self.driver.find_element(By.CSS_SELECTOR, "body > div.page-content > ps-search-results-module > form > div.search-results-module-ajax > ps-search-filters > div > main > ul")   
             articles = posts.find_elements(By.TAG_NAME, "li")
+            time.sleep(2)
+
             for article in articles:
+                title = None
+                word_count_title = None
+                desc = None
+                word_count_desc = None
+                img = None
+                
+                time.sleep(2)
                 title = article.find_element(By.CLASS_NAME, "promo-title")
-                word_count = title.text.lower().count(search_word.lower())
+                word_count_title = title.text.lower().count(search_word.lower())
                 desc = article.find_element(By.CLASS_NAME,"promo-description")
+                word_count_desc = desc.text.lower().count(search_word.lower())
                 img = article.find_element(By.CLASS_NAME,"promo-media")
                 image = img.find_element(By.TAG_NAME, "img")
                 image_src = image.get_attribute("src")
-                pub_date = article.find_element(By.CLASS_NAME, "promo-timestamp")
-                pub_date_str = pub_date.text
+                pub_date_elem = article.find_element(By.CLASS_NAME, "promo-timestamp")
+                pub_date_str = pub_date_elem.text
+                pub_date = self.check_pub_date(pub_date_str)
 
-                article_data = self.Article(title, pub_date, word_count, desc, image)
+                article_data = self.Article(title, pub_date, word_count_title, word_count_desc, desc, image_src)
                 all_data.append(article_data)
-                current_date = datetime.now()
-                three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
-
-                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
-
-            
 
                 print(f"The title: '{title.text}'")
-
-                print(f"The word '{search_word}' appears {word_count} times in the title.")              
-                print(f"The word '{search_word}' appears {word_count} times in the description.")
-
+                print(f"The word '{search_word}' appears {word_count_title} times in the title.")              
+                print(f"The word '{search_word}' appears {word_count_desc} times in the description.")
                 print(f"The description: '{desc.text}'")
                 print(f"Image source: {image_src}")
                 print('-='*90)
-                self.delete_banner(0.1)
+                self.delete_popup(0.1)
 
-
-
-                pub_date = None
-                for fmt in formats:
-                    try:
-                        pub_date = datetime.strptime(pub_date_str, fmt)
-                        print("Correct Date" ,pub_date, "stored three months ago is",three_months_ago)
-                        break
-                    except ValueError as e:
-                        print(f"Error parsing date '{pub_date_str}' with format '{fmt}': {e}")
-                        continue
-
-                if pub_date is not None and pub_date < three_months_ago:
-                    print("Closing because time is more than 3 months")
-                    return all_data
             print('Clicking next')
-            self.delete_banner(1)
+            self.delete_popup(1)
             self.driver.find_element(By.CSS_SELECTOR, "div > .search-results-module-next-page").click()
-            self.delete_banner(1)
-            return all_data, title, word_count, desc, image_src, pub_date_str
+            self.delete_popup(1)
+            
+            return all_data
+
 
         
         
 
-    def export(self, all_data, title, word_count, desc, image_src, pub_date_str):
+    def export(self, all_data):
+        scraped_data = []
+
         for data in all_data:
-            scraped_data = [
-                {"title": title, "word count": word_count, "description": desc, "Image source": image_src, "publish date": pub_date_str},
-            ]
+            # Extract data from each article
+            title = data.title.text
+            word_count = data.word_count
+            desc = data.desc.text
+            image_src = data.image.get_attribute("src")
+            pub_date_str = data.pub_date.text
 
-
+            # Append to scraped_data list
+            scraped_data.append({
+                "title": title,
+                "word count": word_count,
+                "description": desc,
+                "Image source": image_src,
+                "publish date": pub_date_str
+            })
 
         df = pd.DataFrame(scraped_data)
-
         df.to_excel("scraped_data.xlsx", sheet_name="Scraped Data", index=False)
-
         print("Data exported successfully to scraped_data.xlsx!")
-
-
-
-
-
-
-
-
-    # def export(self, scrape):
-    #     articles = []
-    #     data = scrape
-        
-    #     wb = Workbook()
-    #     sheet1 = wb.add_sheet("LA Times")
-        
-    #     sheet1.write(0, 0, "Title")
-    #     sheet1.write(0, 1, "Date")
-    #     sheet1.write(0, 2, "Word-count")
-    #     sheet1.write(0, 3, "Description")
-    #     sheet1.write(0, 4, "Image")
-
-    #     row = 1
-    #     for article in data:
-    #         title_text = str(article.title.text if article.title else "")
-    #         sheet1.write(row, 0, title_text)
-            
-    #         date_text = article.date.text if article.date else ""
-    #         sheet1.write(row, 1, date_text)
-            
-    #         word_count_text = str(article.count)
-    #         sheet1.write(row, 2, word_count_text)
-            
-    #         desc_text = article.description.text if article.description else ""
-    #         sheet1.write(row, 3, desc_text)
-            
-    #         image_src_text = article.image.get_attribute("src") if article.image else ""
-    #         sheet1.write(row, 4, image_src_text)
-            
-    #         row += 1
-        
-    #     try:
-    #         wb.save("news-data.xlsx")
-    #         print("Data exported successfully!")
-    #     except Exception as e:
-    #         print(f"Error saving data: {e}")
-        
-        
-        
-        
-        
-        
-    # def export(self, scrape):
-    #     titles = []
-    #     dates = []
-    #     word_counts = []
-    #     descriptions = []
-    #     images_src = []
-    #     data = []  # Empty list to store all data as dictionaries
-
-    #     for article in scrape:
-    #         title_text = str(article.title.text if article.title else "")
-    #         titles.append(title_text)
-
-    #         date_text = article.date.text if article.date else ""
-    #         dates.append(date_text)
-
-    #         word_count_text = str(article.count)
-    #         word_counts.append(word_count_text)
-
-    #         desc_text = article.description.text if article.description else ""
-    #         descriptions.append(desc_text)
-
-    #         image_src_text = article.image.get_attribute("src") if article.image else ""
-    #         images_src.append(image_src_text)
-
-    #         # Combine data into a dictionary for each article
-    #         article_data = {
-    #             "Title": title_text,
-    #             "Date": date_text,
-    #             "Word-count": word_count_text,
-    #             "Description": desc_text,
-    #             "Image": image_src_text,
-    #         }
-    #         data.append(article_data)
-
-    #     # Now you have all data in the 'data' list as dictionaries
-
-    #     wb = Workbook()
-    #     sheet1 = wb.add_sheet("LA Times")
-
-    #     sheet1.write(0, 0, "Title")
-    #     sheet1.write(0, 1, "Date")
-    #     sheet1.write(0, 2, "Word-count")
-    #     sheet1.write(0, 3, "Description")
-    #     sheet1.write(0, 4, "Image")
-
-    #     row = 1
-    #     for article in data:
-    #         sheet1.write(row, 0, article["Title"])
-    #         sheet1.write(row, 1, article["Date"])
-    #         sheet1.write(row, 2, article["Word-count"])
-    #         sheet1.write(row, 3, article["Description"])
-    #         sheet1.write(row, 4, article["Image"])
-    #         row += 1
-
-    #     try:
-    #         wb.save("news-data.xlsx")
-    #         print("Data exported successfully!")
-    #     except Exception as e:
-    #         print(f"Error saving data: {e}")
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-            # ws.append([article.title.text, articles.count, article.description.text, article.date.text, article.image.get_attribute("src")])
-        # sheet1.write(0, 1, "Data2")
-
-        # Add more rows and data as needed
-
-        # wb = Workbook()
-        # ws = wb.active
-        # wb.save("news_data.xlsx")
 
 
 
