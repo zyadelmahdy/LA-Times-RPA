@@ -5,12 +5,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import time, datetime
 from datetime import datetime, timedelta
-# from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
-from openpyxl import Workbook
+from xlwt import Workbook
 from selenium import webdriver
-# from robocorp.libraries.BuiltIn import BuiltIn
+import pandas as pd
+
 
 options = webdriver.ChromeOptions()
 driver = webdriver.Chrome(options=options)
@@ -138,13 +138,12 @@ class LATimes:
                 pub_date = article.find_element(By.CLASS_NAME, "promo-timestamp")
                 pub_date_str = pub_date.text
 
-                article_data = self.Article(title,pub_date,desc,image,0,0)
+                article_data = self.Article(title, pub_date, word_count, desc, image)
                 all_data.append(article_data)
                 current_date = datetime.now()
                 three_months_ago = current_date - timedelta(days=3*30)  # Assuming 30 days per month
 
-                # Define formats outside the if block
-                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']  # Possible date formats
+                formats = ['%B %d, %Y', '%b. %d, %Y', '%b %d, %Y']
 
             
 
@@ -165,10 +164,10 @@ class LATimes:
                     try:
                         pub_date = datetime.strptime(pub_date_str, fmt)
                         print("Correct Date" ,pub_date, "stored three months ago is",three_months_ago)
-                        break  # Exit loop after successful parsing
+                        break
                     except ValueError as e:
                         print(f"Error parsing date '{pub_date_str}' with format '{fmt}': {e}")
-                        continue  # Move on to the next format
+                        continue
 
                 if pub_date is not None and pub_date < three_months_ago:
                     print("Closing because time is more than 3 months")
@@ -177,19 +176,167 @@ class LATimes:
             self.delete_banner(1)
             self.driver.find_element(By.CSS_SELECTOR, "div > .search-results-module-next-page").click()
             self.delete_banner(1)
+            return all_data, title, word_count, desc, image_src, pub_date_str
+
         
         
 
+    def export(self, all_data, title, word_count, desc, image_src, pub_date_str):
+        for data in all_data:
+            scraped_data = [
+                {"title": title, "word count": word_count, "description": desc, "Image source": image_src, "publish date": pub_date_str},
+            ]
 
-    def export(self):
-        articles = []
-        data = self.pull_data()
-        wb = Workbook()
-        ws = wb.active
-        ws.append(["Title", "Date", "Word count" "Description", "Image"])
-        for article in data:
-            ws.append([article.title, articles.count, article.description, article.date, article.image.get_attribute("src")])
-        wb.save("news_data.xlsx")
+
+
+        df = pd.DataFrame(scraped_data)
+
+        df.to_excel("scraped_data.xlsx", sheet_name="Scraped Data", index=False)
+
+        print("Data exported successfully to scraped_data.xlsx!")
+
+
+
+
+
+
+
+
+    # def export(self, scrape):
+    #     articles = []
+    #     data = scrape
+        
+    #     wb = Workbook()
+    #     sheet1 = wb.add_sheet("LA Times")
+        
+    #     sheet1.write(0, 0, "Title")
+    #     sheet1.write(0, 1, "Date")
+    #     sheet1.write(0, 2, "Word-count")
+    #     sheet1.write(0, 3, "Description")
+    #     sheet1.write(0, 4, "Image")
+
+    #     row = 1
+    #     for article in data:
+    #         title_text = str(article.title.text if article.title else "")
+    #         sheet1.write(row, 0, title_text)
+            
+    #         date_text = article.date.text if article.date else ""
+    #         sheet1.write(row, 1, date_text)
+            
+    #         word_count_text = str(article.count)
+    #         sheet1.write(row, 2, word_count_text)
+            
+    #         desc_text = article.description.text if article.description else ""
+    #         sheet1.write(row, 3, desc_text)
+            
+    #         image_src_text = article.image.get_attribute("src") if article.image else ""
+    #         sheet1.write(row, 4, image_src_text)
+            
+    #         row += 1
+        
+    #     try:
+    #         wb.save("news-data.xlsx")
+    #         print("Data exported successfully!")
+    #     except Exception as e:
+    #         print(f"Error saving data: {e}")
+        
+        
+        
+        
+        
+        
+    # def export(self, scrape):
+    #     titles = []
+    #     dates = []
+    #     word_counts = []
+    #     descriptions = []
+    #     images_src = []
+    #     data = []  # Empty list to store all data as dictionaries
+
+    #     for article in scrape:
+    #         title_text = str(article.title.text if article.title else "")
+    #         titles.append(title_text)
+
+    #         date_text = article.date.text if article.date else ""
+    #         dates.append(date_text)
+
+    #         word_count_text = str(article.count)
+    #         word_counts.append(word_count_text)
+
+    #         desc_text = article.description.text if article.description else ""
+    #         descriptions.append(desc_text)
+
+    #         image_src_text = article.image.get_attribute("src") if article.image else ""
+    #         images_src.append(image_src_text)
+
+    #         # Combine data into a dictionary for each article
+    #         article_data = {
+    #             "Title": title_text,
+    #             "Date": date_text,
+    #             "Word-count": word_count_text,
+    #             "Description": desc_text,
+    #             "Image": image_src_text,
+    #         }
+    #         data.append(article_data)
+
+    #     # Now you have all data in the 'data' list as dictionaries
+
+    #     wb = Workbook()
+    #     sheet1 = wb.add_sheet("LA Times")
+
+    #     sheet1.write(0, 0, "Title")
+    #     sheet1.write(0, 1, "Date")
+    #     sheet1.write(0, 2, "Word-count")
+    #     sheet1.write(0, 3, "Description")
+    #     sheet1.write(0, 4, "Image")
+
+    #     row = 1
+    #     for article in data:
+    #         sheet1.write(row, 0, article["Title"])
+    #         sheet1.write(row, 1, article["Date"])
+    #         sheet1.write(row, 2, article["Word-count"])
+    #         sheet1.write(row, 3, article["Description"])
+    #         sheet1.write(row, 4, article["Image"])
+    #         row += 1
+
+    #     try:
+    #         wb.save("news-data.xlsx")
+    #         print("Data exported successfully!")
+    #     except Exception as e:
+    #         print(f"Error saving data: {e}")
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+            # ws.append([article.title.text, articles.count, article.description.text, article.date.text, article.image.get_attribute("src")])
+        # sheet1.write(0, 1, "Data2")
+
+        # Add more rows and data as needed
+
+        # wb = Workbook()
+        # ws = wb.active
+        # wb.save("news_data.xlsx")
 
 
 
