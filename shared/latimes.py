@@ -179,6 +179,7 @@ class LATimes:
 
                     article_data = self.Article(title, pub_date, word_count_title, word_count_desc, desc, image_src)
                     all_data.append(article_data)
+                    
 
                     print(f"The title: '{title.text}'")
                     print(f"The word '{search_word}' appears {word_count_title} times in the title.")
